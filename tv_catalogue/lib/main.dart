@@ -1,13 +1,18 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'app/data/repositories_impl/authentication_repository_impl.dart';
 import 'app/data/repositories_impl/connectivity_repository_impl.dart';
+import 'app/data/services/remote/internet_checker.dart';
 import 'app/domain/repositories/authentication_respository.dart';
 import 'app/domain/repositories/connectivity_respository.dart';
 import 'app/my_app.dart';
 
 void main() {
   runApp(Injector(
-    connectivityRepo: ConnectivityRepositoryImpl(),
+    connectivityRepo: ConnectivityRepositoryImpl(
+      Connectivity(),
+      InternetChecker(),
+    ),
     authRepo: AuthenticationRepositoryImpl(),
     child: const MyApp(),
   ));
