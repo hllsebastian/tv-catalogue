@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../main.dart';
+import '../../../routes/routes.dart';
+
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       body: Center(
-        child: Text("YOU'RE AT HOME"),
+        child: TextButton(
+            onPressed: () async {
+              Injector.of(context).authRepo.signOut();
+              Navigator.pushReplacementNamed(context, Routes.signIn);
+            },
+            child: const Text("Press here to Sign Out")),
       ),
     );
   }
