@@ -15,7 +15,7 @@ class HomeView extends StatelessWidget {
               Injector.of(context).authRepo.signOut();
               Navigator.pushReplacementNamed(context, Routes.signIn);
             },
-            child: const Text("Press here to Sign Out")),
+            child: const Text('Press here to Sign Out')),
       ),
     );
   }

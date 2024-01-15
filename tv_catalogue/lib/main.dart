@@ -1,8 +1,10 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
 import 'app/data/repositories_impl/authentication_repository_impl.dart';
 import 'app/data/repositories_impl/connectivity_repository_impl.dart';
+import 'app/data/services/remote/authentication_api.dart';
 import 'app/data/services/remote/internet_checker.dart';
 import 'app/domain/repositories/authentication_respository.dart';
 import 'app/domain/repositories/connectivity_respository.dart';
@@ -14,7 +16,11 @@ void main() {
       Connectivity(),
       InternetChecker(),
     ),
-    authRepo: AuthenticationRepositoryImpl(const FlutterSecureStorage()),
+    authRepo: AuthenticationRepositoryImpl(
+        const FlutterSecureStorage(),
+        AuthenticationApi(
+          http.Client(),
+        )),
     child: const MyApp(),
   ));
 }

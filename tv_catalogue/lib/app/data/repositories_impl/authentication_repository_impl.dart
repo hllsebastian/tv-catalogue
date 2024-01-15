@@ -4,13 +4,14 @@ import '../../domain/enums.dart';
 import '../../domain/models/user.dart';
 import '../../domain/repositories/authentication_respository.dart';
 import '../../domain/repositories/either.dart';
+import '../services/remote/authentication_api.dart';
 
 const _key = 'sessionId';
 
 class AuthenticationRepositoryImpl implements AuthenticationRepository {
+  AuthenticationRepositoryImpl(this._secureStorage, this._authenticationApi);
   final FlutterSecureStorage _secureStorage;
-
-  AuthenticationRepositoryImpl(this._secureStorage);
+  final AuthenticationApi _authenticationApi;
 
   @override
   Future<bool> get isSignedIn async {
@@ -26,17 +27,38 @@ class AuthenticationRepositoryImpl implements AuthenticationRepository {
     String userName,
     String password,
   ) async {
-    await Future.delayed(Duration(seconds: 2));
-    if (userName != 'test') {
-      return Either.left(SingInFailure.notFound);
-    }
-    if (password != '123456') {
-      return Either.left(SingInFailure.unauthorized);
-    }
+    final requestToken = await _authenticationApi.createRequestToken();
+    if (requestToken == null) return Either.left(SingInFailure.unknown);
 
-    await _secureStorage.write(key: _key, value: '123');
+    final loginResult = await _authenticationApi.createSessionWithLogin(
+      userName: userName,
+      password: password,
+      requestToken: requestToken,
+    );
 
-    return Either.right(User());
+    // final sessionId = await _authenticationApi.createSessionId(requestToken);
+
+    // await Future.delayed(Duration(seconds: 2));
+    // if (userName != 'test') {
+    //   return Either.left(SingInFailure.notFound);
+    // }
+    // if (password != '123456') {
+    //   return Either.left(SingInFailure.unauthorized);
+    // }
+
+    return loginResult.when((failure) async => Either.left(failure), (
+      newRequestToken,
+    ) async {
+      final sessionResult = await _authenticationApi.createSessionId(
+        newRequestToken,
+      );
+
+      return sessionResult.when((failure) async => Either.left(failure),
+          (sessionId) async {
+        await _secureStorage.write(key: _key, value: sessionId);
+        return Either.right(User());
+      });
+    });
   }
 
   @override

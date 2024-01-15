@@ -1,1 +1,1 @@
-enum SingInFailure { notFound, unauthorized, unknown }
+enum SingInFailure { notFound, unauthorized, unknown, network }
