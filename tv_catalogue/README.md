@@ -1,6 +1,6 @@
 # tv_catalogue
 
-A new Flutter project.
+Catalogue of movies and series.
 
 ## Getting Started
 
