@@ -27,38 +27,32 @@ class AuthenticationRepositoryImpl implements AuthenticationRepository {
     String userName,
     String password,
   ) async {
-    final requestToken = await _authenticationApi.createRequestToken();
-    if (requestToken == null) return Either.left(SingInFailure.unknown);
+    final requestTokenResult = await _authenticationApi.createRequestToken();
 
-    final loginResult = await _authenticationApi.createSessionWithLogin(
-      userName: userName,
-      password: password,
-      requestToken: requestToken,
+    return requestTokenResult.when(
+      (failure) => Either.left(failure),
+      (requestToken) async {
+        final loginResult = await _authenticationApi.createSessionWithLogin(
+          userName: userName,
+          password: password,
+          requestToken: requestToken,
+        );
+
+        return loginResult.when((failure) async => Either.left(failure), (
+          newRequestToken,
+        ) async {
+          final sessionResult = await _authenticationApi.createSessionId(
+            newRequestToken,
+          );
+
+          return sessionResult.when((failure) async => Either.left(failure),
+              (sessionId) async {
+            await _secureStorage.write(key: _key, value: sessionId);
+            return Either.right(User());
+          });
+        });
+      },
     );
-
-    // final sessionId = await _authenticationApi.createSessionId(requestToken);
-
-    // await Future.delayed(Duration(seconds: 2));
-    // if (userName != 'test') {
-    //   return Either.left(SingInFailure.notFound);
-    // }
-    // if (password != '123456') {
-    //   return Either.left(SingInFailure.unauthorized);
-    // }
-
-    return loginResult.when((failure) async => Either.left(failure), (
-      newRequestToken,
-    ) async {
-      final sessionResult = await _authenticationApi.createSessionId(
-        newRequestToken,
-      );
-
-      return sessionResult.when((failure) async => Either.left(failure),
-          (sessionId) async {
-        await _secureStorage.write(key: _key, value: sessionId);
-        return Either.right(User());
-      });
-    });
   }
 
   @override
