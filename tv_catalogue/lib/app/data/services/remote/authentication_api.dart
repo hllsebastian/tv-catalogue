@@ -8,20 +8,37 @@ class AuthenticationApi {
   AuthenticationApi(this._http);
   final Http _http;
 
-  Future<Either<SingInFailure, String>> createRequestToken() async {
-    final result = await _http.request('/authentication/token/new');
-
-    return result.when((failure) {
-      if (failure.exception is NetworkException) {
-        return Either.left(SingInFailure.network);
+  Either<SingInFailure, String> _handleError(HttpFailure failure) {
+    if (failure.statuscode != null) {
+      switch (failure.statuscode) {
+        case 400:
+          return Either.left(SingInFailure.unauthorized);
+        case 401:
+          return Either.left(SingInFailure.notFound);
+        default:
+          return Either.left(SingInFailure.unknown);
       }
-      print('${failure.exception}****${failure.statuscode}');
-      return Either.left(SingInFailure.unknown);
-    }, (responseBody) {
-      final json = Map<String, dynamic>.from(jsonDecode(responseBody));
-      final requestToken = json['request_token'] as String;
-      return Either.right(requestToken);
-    });
+    }
+    if (failure.exception is NetworkException) {
+      return Either.left(SingInFailure.network);
+    }
+    return Either.left(SingInFailure.unknown);
+  }
+
+  Future<Either<SingInFailure, String>> createRequestToken() async {
+    final result = await _http.request(
+      '/authentication/token/new',
+      onSuccess: (responseBody) {
+        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
+        final requestToken = json['request_token'] as String;
+        return requestToken;
+      },
+    );
+
+    return result.when(
+      _handleError,
+      (responseBody) => Either.right(responseBody),
+    );
   }
 
   Future<Either<SingInFailure, String>> createSessionWithLogin({
@@ -30,36 +47,22 @@ class AuthenticationApi {
     required String requestToken,
   }) async {
     final result = await _http.request(
-        '/authentication/token/validate_with_login',
-        method: HttpMethod.post,
-        body: {
-          'username': userName,
-          'password': password,
-          'request_token': requestToken,
-        });
+      '/authentication/token/validate_with_login',
+      method: HttpMethod.post,
+      body: {
+        'username': userName,
+        'password': password,
+        'request_token': requestToken,
+      },
+      onSuccess: (responseBody) {
+        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
+        return json['request_token'] as String;
+      },
+    );
 
     return result.when(
-      (failure) {
-        if (failure.statuscode != null) {
-          switch (failure.statuscode) {
-            case 400:
-              return Either.left(SingInFailure.unauthorized);
-            case 401:
-              return Either.left(SingInFailure.notFound);
-            default:
-              return Either.left(SingInFailure.unknown);
-          }
-        }
-        if (failure.exception is NetworkException) {
-          return Either.left(SingInFailure.network);
-        }
-        return Either.left(SingInFailure.network);
-      },
-      (responseBody) {
-        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
-        final requestToken = json['request_token'] as String;
-        return Either.right(requestToken);
-      },
+      _handleError,
+      (newRequestToken) => Either.right(newRequestToken),
     );
   }
 
@@ -70,20 +73,15 @@ class AuthenticationApi {
       '/authentication/session/new',
       method: HttpMethod.post,
       body: {'request_token': requestToken},
+      onSuccess: (responseBody) {
+        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
+        return json['session_id'] as String;
+      },
     );
 
     return result.when(
-      (failure) {
-        if (failure.exception is NetworkException) {
-          return Either.left(SingInFailure.network);
-        }
-        return Either.left(SingInFailure.unknown);
-      },
-      (responseBody) {
-        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
-        final sessionId = json['session_id'] as String;
-        return Either.right(sessionId);
-      },
+      _handleError,
+      (sessionId) => Either.right(sessionId),
     );
   }
 }
