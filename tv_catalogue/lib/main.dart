@@ -23,6 +23,7 @@ void main() {
         Http(
           client: http.Client(),
           baseUrl: 'https://api.themoviedb.org/3',
+          apiKey: '55544097f5114f21b47c08544041024e',
         ),
       ),
     ),

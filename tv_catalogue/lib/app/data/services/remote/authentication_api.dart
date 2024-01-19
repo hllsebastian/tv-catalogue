@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import '../../../domain/enums.dart';
 import '../../../domain/repositories/either.dart';
 import '../../http/http.dart';
@@ -29,7 +27,7 @@ class AuthenticationApi {
     final result = await _http.request(
       '/authentication/token/new',
       onSuccess: (responseBody) {
-        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
+        final json = responseBody as Map;
         final requestToken = json['request_token'] as String;
         return requestToken;
       },
@@ -55,7 +53,7 @@ class AuthenticationApi {
         'request_token': requestToken,
       },
       onSuccess: (responseBody) {
-        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
+        final json = responseBody as Map;
         return json['request_token'] as String;
       },
     );
@@ -74,7 +72,7 @@ class AuthenticationApi {
       method: HttpMethod.post,
       body: {'request_token': requestToken},
       onSuccess: (responseBody) {
-        final json = Map<String, dynamic>.from(jsonDecode(responseBody));
+        final json = responseBody as Map;
         return json['session_id'] as String;
       },
     );
