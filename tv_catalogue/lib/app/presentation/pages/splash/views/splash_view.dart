@@ -38,7 +38,7 @@ class _SplashViewState extends State<SplashView> {
           }
         }
       }
-      // "mounted" to knok if the widget cotinue rendered
+      // "mounted" to know if the widget cotinue rendered (stataful widgets)
       else if (mounted) {
         _goTo(Routes.signIn);
       }
