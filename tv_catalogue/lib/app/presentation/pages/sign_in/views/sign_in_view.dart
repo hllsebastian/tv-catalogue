@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../../main.dart';
 import '../../../../domain/enums.dart';
+import '../../../../domain/repositories/authentication_respository.dart';
 import '../../../routes/routes.dart';
 
 class SignInView extends StatefulWidget {
@@ -87,8 +89,9 @@ class _SignInViewState extends State<SignInView> {
     setState(() {
       _fetching = true;
     });
-    final response =
-        await Injector.of(context).authRepo.signIn(_userName, _password);
+    final response = await context
+        .read<AuthenticationRepository>()
+        .signIn(_userName, _password);
 
     // To check that the wiget is rendered before to use the navigation to home
     // and avoid issue with the context

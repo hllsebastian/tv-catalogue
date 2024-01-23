@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../../main.dart';
+import '../../../../domain/repositories/authentication_respository.dart';
 import '../../../routes/routes.dart';
 
 class HomeView extends StatelessWidget {
@@ -12,7 +14,7 @@ class HomeView extends StatelessWidget {
       body: Center(
         child: TextButton(
             onPressed: () async {
-              Injector.of(context).authRepo.signOut();
+              context.read<AuthenticationRepository>().signOut();
               Navigator.pushReplacementNamed(context, Routes.signIn);
             },
             child: const Text('Press here to Sign Out')),
